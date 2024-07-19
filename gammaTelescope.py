@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import StandardScaler
+from imblearn.over_sampling import RandomOverSampler
 
 # Define the column names
 cols = ["fLength", "fWidth", "fSize", "fConc", "fConc1",
@@ -30,7 +31,10 @@ for label in cols[:-1]:  # Exclude the last column which is "class"
     plt.legend()
     plt.grid(True)
     plt.show()
-#Print the number of gammas and hadrons
-print(len(df[df["class"]==1])) #Gamma
-print(len(df[df["class"]==0]))#Hadron
 
+#Print the number of gammas and hadrons
+print("Gammas: " )
+print(len(df[df["class"]==1])) #Gamma
+#We may oversample if the hadrons are significantly less than gammas
+print("Hadrons: ")
+print(len(df[df["class"]==0]))#Hadron
