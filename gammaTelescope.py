@@ -11,13 +11,7 @@ cols = ["fLength", "fWidth", "fSize", "fConc", "fConc1",
 # Read the dataset into a DataFrame
 df = pd.read_csv("telescope.data", names=cols)
 
-# Uncomment the line below to display the first few rows of the DataFrame
-# df.head()
-
-# Uncomment the line below to show unique values in the "class"
-# df["class"].unique()
-
-# Assuming "class" contains labels like "g" for gamma and "h" for something else
+# Convert class labels to binary integers (1 for Gamma, 0 for Hadron)
 df["class"] = (df["class"] == "g").astype(int)
 
 # Plot histograms for each feature
@@ -32,9 +26,29 @@ for label in cols[:-1]:  # Exclude the last column which is "class"
     plt.grid(True)
     plt.show()
 
-#Print the number of gammas and hadrons
-print("Gammas: " )
-print(len(df[df["class"]==1])) #Gamma
-#We may oversample if the hadrons are significantly less than gammas
-print("Hadrons: ")
-print(len(df[df["class"]==0]))#Hadron
+def scale_dataset(dataframe, oversample=False):
+    if isinstance(dataframe, pd.DataFrame):
+        # If dataframe is a Pandas DataFrame
+        X = dataframe[dataframe.columns[:-1]].values  # Get features as numpy array
+        y = dataframe[dataframe.columns[-1]].values  # Get target as numpy array
+
+        scaler = StandardScaler()
+        X = scaler.fit_transform(X)
+
+        if oversample:
+            ros = RandomOverSampler()
+            X, y = ros.fit_resample(X, y)
+
+        # Concatenate X and y into a single array
+        data = np.hstack((X, np.reshape(y, (-1, 1))))
+
+        return data, X, y
+
+# Scale and oversample the dataset
+data, X_train, y_train = scale_dataset(df, oversample=True)
+
+# Print the lengths of X_train (features) and y_train (target) after preprocessing
+print("Gammas:")
+print(len(X_train))
+print("Hadrons:")
+print(len(y_train))
