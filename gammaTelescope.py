@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import StandardScaler
+from sklearn.neighbors import KNeighborsClassifier
 from imblearn.over_sampling import RandomOverSampler
 
 # Define the column names
@@ -52,3 +53,32 @@ print("Gammas:")
 print(len(X_train))
 print("Hadrons:")
 print(len(y_train))
+
+train, X_train, y_train = scale_dataset(df, oversample=True)
+valid, X_valid, y_valid = scale_dataset(df, oversample=False)
+test, X_test, y_test = scale_dataset(df, oversample=False)
+
+#knn_model = KNeighborsClassifier(n_neighbors=1)
+# Scale and oversample the dataset
+#X_train, y_train = scale_dataset(df, oversample=True)
+
+# Create KNN model
+knn_model = KNeighborsClassifier(n_neighbors=1)
+
+# Fit the model
+knn_model.fit(X_train, y_train)
+
+# Predict on training data to get distances to nearest neighbors
+distances, indices = knn_model.kneighbors(X_train)
+
+# Plot histogram of distances to nearest neighbor for each class
+plt.figure(figsize=(8, 6))
+plt.hist(distances[y_train == 1][:, 0], bins=30, color='blue', label='Gamma', alpha=0.7, density=True)
+plt.hist(distances[y_train == 0][:, 0], bins=30, color='red', label='Hadron', alpha=0.7, density=True)
+plt.title('Histogram of Euclidean Distances to Nearest Neighbor')
+plt.xlabel('Distance')
+plt.ylabel('Probability Density')
+plt.legend()
+plt.grid(True)
+plt.show()
+      
