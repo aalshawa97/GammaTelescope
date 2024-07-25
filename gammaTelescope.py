@@ -3,6 +3,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import StandardScaler
 from sklearn.neighbors import KNeighborsClassifier
+from sklearn.metrics import classification_report  
+from sklearn.model_selection import train_test_split
 from imblearn.over_sampling import RandomOverSampler
 
 # Define the column names
@@ -27,46 +29,38 @@ for label in cols[:-1]:  # Exclude the last column which is "class"
     plt.grid(True)
     plt.show()
 
-def scale_dataset(dataframe, oversample=False):
-    if isinstance(dataframe, pd.DataFrame):
-        # If dataframe is a Pandas DataFrame
-        X = dataframe[dataframe.columns[:-1]].values  # Get features as numpy array
-        y = dataframe[dataframe.columns[-1]].values  # Get target as numpy array
+def scale_and_oversample(X, y, oversample=False):
+    scaler = StandardScaler()
+    X = scaler.fit_transform(X)
 
-        scaler = StandardScaler()
-        X = scaler.fit_transform(X)
+    if oversample:
+        ros = RandomOverSampler()
+        X, y = ros.fit_resample(X, y)
 
-        if oversample:
-            ros = RandomOverSampler()
-            X, y = ros.fit_resample(X, y)
+    return X, y
 
-        # Concatenate X and y into a single array
-        data = np.hstack((X, np.reshape(y, (-1, 1))))
+# Split the dataset into training, validation, and test sets
+X = df[df.columns[:-1]].values  # Features
+y = df[df.columns[-1]].values  # Target
 
-        return data, X, y
+X_train, X_temp, y_train, y_temp = train_test_split(X, y, test_size=0.4, random_state=42)
+X_valid, X_test, y_valid, y_test = train_test_split(X_temp, y_temp, test_size=0.5, random_state=42)
 
-# Scale and oversample the dataset
-data, X_train, y_train = scale_dataset(df, oversample=True)
+# Scale and oversample the training dataset
+X_train, y_train = scale_and_oversample(X_train, y_train, oversample=True)
 
-# Print the lengths of X_train (features) and y_train (target) after preprocessing
-print("Gammas:")
-print(len(X_train))
-print("Hadrons:")
-print(len(y_train))
-
-train, X_train, y_train = scale_dataset(df, oversample=True)
-valid, X_valid, y_valid = scale_dataset(df, oversample=False)
-test, X_test, y_test = scale_dataset(df, oversample=False)
-
-#knn_model = KNeighborsClassifier(n_neighbors=1)
-# Scale and oversample the dataset
-#X_train, y_train = scale_dataset(df, oversample=True)
+# Scale the validation and test datasets without oversampling
+X_valid, y_valid = scale_and_oversample(X_valid, y_valid, oversample=False)
+X_test, y_test = scale_and_oversample(X_test, y_test, oversample=False)
 
 # Create KNN model
 knn_model = KNeighborsClassifier(n_neighbors=1)
 
 # Fit the model
 knn_model.fit(X_train, y_train)
+
+# Predict on test data
+y_pred = knn_model.predict(X_test)
 
 # Predict on training data to get distances to nearest neighbors
 distances, indices = knn_model.kneighbors(X_train)
@@ -81,4 +75,5 @@ plt.ylabel('Probability Density')
 plt.legend()
 plt.grid(True)
 plt.show()
-      
+
+print(classification_report(y_test, y_pred))
