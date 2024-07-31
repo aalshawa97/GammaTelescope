@@ -1,11 +1,14 @@
+#Import libraries
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+from sklearn.naive_bayes import GaussianNB
 from sklearn.preprocessing import StandardScaler
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.metrics import classification_report  
+from sklearn.metrics import classification_report
 from sklearn.model_selection import train_test_split
 from imblearn.over_sampling import RandomOverSampler
+from sklearn.linear_model import LogisticRegression
 
 # Define the column names
 cols = ["fLength", "fWidth", "fSize", "fConc", "fConc1",
@@ -76,4 +79,19 @@ plt.legend()
 plt.grid(True)
 plt.show()
 
+print(classification_report(y_test, y_pred))
+
+#All features are independent given the class label
+nb_model = GaussianNB()
+nb_model = nb_model.fit(X_train, y_train)
+
+y_pred = nb_model.predict(X_test)
+print(classification_report(y_test, y_pred))
+
+#Probability of an event to happen
+lg_model = LogisticRegression()
+lg_model = lg_model.fit(X_train, y_train)
+
+#Supervised machine learning for probability of an event with binary classification
+y_pred = lg_model.predict(X_test)
 print(classification_report(y_test, y_pred))
