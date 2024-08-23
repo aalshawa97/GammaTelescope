@@ -1,15 +1,12 @@
-#Import libraries
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from sklearn.naive_bayes import GaussianNB
 from sklearn.preprocessing import StandardScaler
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import classification_report
-from sklearn.model_selection import train_test_split
 from imblearn.over_sampling import RandomOverSampler
-from sklearn.linear_model import LogisticRegression
-
+from sklearn.svm import SVC
+import tensorflow as tf
 # Define the column names
 cols = ["fLength", "fWidth", "fSize", "fConc", "fConc1",
         "fAsym", "fM3Long", "fM3Trans", "fAlpha", "fDist", "class"]
@@ -32,29 +29,40 @@ for label in cols[:-1]:  # Exclude the last column which is "class"
     plt.grid(True)
     plt.show()
 
-def scale_and_oversample(X, y, oversample=False):
-    scaler = StandardScaler()
-    X = scaler.fit_transform(X)
+def scale_dataset(dataframe, oversample=False):
+    if isinstance(dataframe, pd.DataFrame):
+        # If dataframe is a Pandas DataFrame
+        X = dataframe[dataframe.columns[:-1]].values  # Get features as numpy array
+        y = dataframe[dataframe.columns[-1]].values  # Get target as numpy array
 
-    if oversample:
-        ros = RandomOverSampler()
-        X, y = ros.fit_resample(X, y)
+        scaler = StandardScaler()
+        X = scaler.fit_transform(X)
 
-    return X, y
+        if oversample:
+            ros = RandomOverSampler()
+            X, y = ros.fit_resample(X, y)
 
-# Split the dataset into training, validation, and test sets
-X = df[df.columns[:-1]].values  # Features
-y = df[df.columns[-1]].values  # Target
+        # Concatenate X and y into a single array
+        data = np.hstack((X, np.reshape(y, (-1, 1))))
 
-X_train, X_temp, y_train, y_temp = train_test_split(X, y, test_size=0.4, random_state=42)
-X_valid, X_test, y_valid, y_test = train_test_split(X_temp, y_temp, test_size=0.5, random_state=42)
+        return data, X, y
 
-# Scale and oversample the training dataset
-X_train, y_train = scale_and_oversample(X_train, y_train, oversample=True)
+# Scale and oversample the dataset
+data, X_train, y_train = scale_dataset(df, oversample=True)
 
-# Scale the validation and test datasets without oversampling
-X_valid, y_valid = scale_and_oversample(X_valid, y_valid, oversample=False)
-X_test, y_test = scale_and_oversample(X_test, y_test, oversample=False)
+# Print the lengths of X_train (features) and y_train (target) after preprocessing
+print("Gammas:")
+print(len(X_train))
+print("Hadrons:")
+print(len(y_train))
+
+train, X_train, y_train = scale_dataset(df, oversample=True)
+valid, X_valid, y_valid = scale_dataset(df, oversample=False)
+test, X_test, y_test = scale_dataset(df, oversample=False)
+
+#knn_model = KNeighborsClassifier(n_neighbors=1)
+# Scale and oversample the dataset
+#X_train, y_train = scale_dataset(df, oversample=True)
 
 # Create KNN model
 knn_model = KNeighborsClassifier(n_neighbors=1)
@@ -62,7 +70,6 @@ knn_model = KNeighborsClassifier(n_neighbors=1)
 # Fit the model
 knn_model.fit(X_train, y_train)
 
-# Predict on test data
 y_pred = knn_model.predict(X_test)
 
 # Predict on training data to get distances to nearest neighbors
@@ -79,19 +86,27 @@ plt.legend()
 plt.grid(True)
 plt.show()
 
+#print(classification_report(y_test, y_pred))
+svm_model = SVC()
+svm_model = svm_model.fit(X_train, y_train)
+y_pred = svm_model.predict(X_test)
 print(classification_report(y_test, y_pred))
 
-#All features are independent given the class label
-nb_model = GaussianNB()
-nb_model = nb_model.fit(X_train, y_train)
-
-y_pred = nb_model.predict(X_test)
+#history = nm_mode.fit(
+#    X_train, y_train,
+#)
+svm_model = SVC()
+svm_model = svm_model.fit(X_train, y_train)
+y_pred = svm_model.predict(X_test)
 print(classification_report(y_test, y_pred))
 
-#Probability of an event to happen
-lg_model = LogisticRegression()
-lg_model = lg_model.fit(X_train, y_train)
-
-#Supervised machine learning for probability of an event with binary classification
-y_pred = lg_model.predict(X_test)
-print(classification_report(y_test, y_pred))
+#Neural Net
+nm_model = tf.keras.Sequential([
+    tf.keras.layers.Dense(32, activation='relu', input_shape=(10, )),
+    tf.keras.layers.Dense(32, activation='relu'),
+    tf.keras.layers.Dense(1, activation='sigmoid')
+])
+nm_model.summary()
+#history = nm_model.fit(
+#    X_train, y_train, epochs=100, batch_size = 32, validation_split=0.2
+#)
