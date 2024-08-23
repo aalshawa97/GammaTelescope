@@ -1,4 +1,10 @@
+#Import libraries
+
+#Provides support for large, multi-dimensional arrays and matrices, along with a collection of math functions to operate on these arrays.
+#Ideal for numerical/math operations for scientific computing.
 import numpy as np
+#Offers data structures and functions specifically designed for working with structured data, such as tables or spreadsheets.
+#Suited for data manipulation, cleaning, and analysis. It provides tools for handling and analyzing time series, heterogeneous data, and labeled data.
 import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import StandardScaler
