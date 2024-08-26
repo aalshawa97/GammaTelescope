@@ -1,10 +1,5 @@
-#Import libraries
-
-#Provides support for large, multi-dimensional arrays and matrices, along with a collection of math functions to operate on these arrays.
-#Ideal for numerical/math operations for scientific computing.
+# Import libraries
 import numpy as np
-#Offers data structures and functions specifically designed for working with structured data, such as tables or spreadsheets.
-#Suited for data manipulation, cleaning, and analysis. It provides tools for handling and analyzing time series, heterogeneous data, and labeled data.
 import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import StandardScaler
@@ -13,6 +8,7 @@ from sklearn.metrics import classification_report
 from imblearn.over_sampling import RandomOverSampler
 from sklearn.svm import SVC
 import tensorflow as tf
+
 # Define the column names
 cols = ["fLength", "fWidth", "fSize", "fConc", "fConc1",
         "fAsym", "fM3Long", "fM3Trans", "fAlpha", "fDist", "class"]
@@ -26,8 +22,8 @@ df["class"] = (df["class"] == "g").astype(int)
 # Plot histograms for each feature
 for label in cols[:-1]:  # Exclude the last column which is "class"
     plt.figure(figsize=(6, 4))
-    plt.hist(df[df["class"]==1][label], bins=30, color='blue', label='Gamma', alpha=0.7, density=True)
-    plt.hist(df[df["class"]==0][label], bins=30, color='red', label='Hadron', alpha=0.7, density=True)
+    plt.hist(df[df["class"] == 1][label], bins=30, color='blue', label='Gamma', alpha=0.7, density=True)
+    plt.hist(df[df["class"] == 0][label], bins=30, color='red', label='Hadron', alpha=0.7, density=True)
     plt.title(f'Histogram of {label}')
     plt.xlabel(label)
     plt.ylabel('Probability Density')
@@ -37,10 +33,11 @@ for label in cols[:-1]:  # Exclude the last column which is "class"
 
 def scale_dataset(dataframe, oversample=False):
     if isinstance(dataframe, pd.DataFrame):
-        # If dataframe is a Pandas DataFrame
+        # Extract features and target
         X = dataframe[dataframe.columns[:-1]].values  # Get features as numpy array
         y = dataframe[dataframe.columns[-1]].values  # Get target as numpy array
 
+        # Standardize features
         scaler = StandardScaler()
         X = scaler.fit_transform(X)
 
@@ -48,35 +45,28 @@ def scale_dataset(dataframe, oversample=False):
             ros = RandomOverSampler()
             X, y = ros.fit_resample(X, y)
 
-        # Concatenate X and y into a single array
-        data = np.hstack((X, np.reshape(y, (-1, 1))))
-
-        return data, X, y
+        return X, y
 
 # Scale and oversample the dataset
-data, X_train, y_train = scale_dataset(df, oversample=True)
+X_train, y_train = scale_dataset(df, oversample=True)
 
 # Print the lengths of X_train (features) and y_train (target) after preprocessing
-print("Gammas:")
+print("Training Set Size:")
 print(len(X_train))
-print("Hadrons:")
+print("Training Labels Size:")
 print(len(y_train))
 
-train, X_train, y_train = scale_dataset(df, oversample=True)
-valid, X_valid, y_valid = scale_dataset(df, oversample=False)
-test, X_test, y_test = scale_dataset(df, oversample=False)
+# Split data into train, validation, and test sets
+X_train, y_train = scale_dataset(df, oversample=True)
+X_valid, y_valid = scale_dataset(df, oversample=False)
+X_test, y_test = scale_dataset(df, oversample=False)
 
-#knn_model = KNeighborsClassifier(n_neighbors=1)
-# Scale and oversample the dataset
-#X_train, y_train = scale_dataset(df, oversample=True)
-
-# Create KNN model
+# Create and fit KNN model
 knn_model = KNeighborsClassifier(n_neighbors=1)
-
-# Fit the model
 knn_model.fit(X_train, y_train)
 
-y_pred = knn_model.predict(X_test)
+# Predict on test data
+y_pred_knn = knn_model.predict(X_test)
 
 # Predict on training data to get distances to nearest neighbors
 distances, indices = knn_model.kneighbors(X_train)
@@ -92,32 +82,30 @@ plt.legend()
 plt.grid(True)
 plt.show()
 
-#print(classification_report(y_test, y_pred))
+# Train and evaluate SVM model
 svm_model = SVC()
-svm_model = svm_model.fit(X_train, y_train)
-y_pred = svm_model.predict(X_test)
-print(classification_report(y_test, y_pred))
+svm_model.fit(X_train, y_train)
+y_pred_svm = svm_model.predict(X_test)
+print("SVM Classification Report:")
+print(classification_report(y_test, y_pred_svm))
 
-#history = nm_mode.fit(
-#    X_train, y_train,
-#)
-svm_model = SVC()
-svm_model = svm_model.fit(X_train, y_train)
-y_pred = svm_model.predict(X_test)
-print(classification_report(y_test, y_pred))
-
-#Neural Net
+# Define and compile Neural Network model
 nm_model = tf.keras.Sequential([
-    #ReLu keeps positive values and blocks negative ones
-    tf.keras.layers.Dense(32, activation='relu', input_shape=(10, )),
+    tf.keras.layers.Dense(32, activation='relu', input_shape=(X_train.shape[1], )),
     tf.keras.layers.Dense(32, activation='relu'),
     tf.keras.layers.Dense(1, activation='sigmoid')
 ])
-# Compile the model with the Adam optimizer
-nm_model.compile(optimizer=tf.keras.optimizers.Adam(), 
-              loss='sparse_categorical_crossentropy', 
-              metrics=['accuracy'])
+
+nm_model.compile(optimizer=tf.keras.optimizers.Adam(),
+                 loss='binary_crossentropy', 
+                 metrics=['accuracy'])
+
 nm_model.summary()
-#history = nm_model.fit(
-#    X_train, y_train, epochs=100, batch_size = 32, validation_split=0.2
-#)
+
+# Train the Neural Network model
+history = nm_model.fit(X_train, y_train, epochs=100, batch_size=32, validation_split=0.2)
+
+# Evaluate the Neural Network model
+loss, accuracy = nm_model.evaluate(X_test, y_test)
+print("Neural Network Test Loss:", loss)
+print("Neural Network Test Accuracy:", accuracy)
