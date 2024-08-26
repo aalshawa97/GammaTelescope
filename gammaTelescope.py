@@ -97,12 +97,12 @@ nm_model = tf.keras.Sequential([
 ])
 
 nm_model.compile(optimizer=tf.keras.optimizers.Adam(),
-                 loss='binary_crossentropy', 
+                 loss='binary_crossentropy',
                  metrics=['accuracy'])
 
 nm_model.summary()
 
-# Train the Neural Network model
+# Train the Neural Network model, an epoch is a training cycle
 history = nm_model.fit(X_train, y_train, epochs=100, batch_size=32, validation_split=0.2)
 
 # Evaluate the Neural Network model
