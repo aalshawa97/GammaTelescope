@@ -108,10 +108,15 @@ print(classification_report(y_test, y_pred))
 
 #Neural Net
 nm_model = tf.keras.Sequential([
+    #ReLu keeps positive values and blocks negative ones
     tf.keras.layers.Dense(32, activation='relu', input_shape=(10, )),
     tf.keras.layers.Dense(32, activation='relu'),
     tf.keras.layers.Dense(1, activation='sigmoid')
 ])
+# Compile the model with the Adam optimizer
+nm_model.compile(optimizer=tf.keras.optimizers.Adam(), 
+              loss='sparse_categorical_crossentropy', 
+              metrics=['accuracy'])
 nm_model.summary()
 #history = nm_model.fit(
 #    X_train, y_train, epochs=100, batch_size = 32, validation_split=0.2
