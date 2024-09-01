@@ -90,13 +90,14 @@ print(classification_report(y_test, y_pred_svm))
 
 # Define dropout probability
 dropout_prob = 0.5  # Example value, adjust as needed
-
+num_nodes = 32
 # Define and compile Neural Network model with Input layer
 nm_model = tf.keras.Sequential([
     tf.keras.layers.Input(shape=(X_train.shape[1],)),  # Specify input shape here
-    tf.keras.layers.Dense(32, activation='relu'),
+    tf.keras.layers.Dense(num_nodes, activation='relu'),
     tf.keras.layers.Dropout(dropout_prob),  # Add Dropout layer here
-    tf.keras.layers.Dense(32, activation='relu'),
+    tf.keras.layers.Dense(num_nodes, activation='relu'),
+    tf.keras.layers.Dropout(dropout_prob),
     tf.keras.layers.Dense(1, activation='sigmoid')
 ])
 
