@@ -1,4 +1,3 @@
-# Import libraries
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -89,9 +88,14 @@ y_pred_svm = svm_model.predict(X_test)
 print("SVM Classification Report:")
 print(classification_report(y_test, y_pred_svm))
 
-# Define and compile Neural Network model
+# Define dropout probability
+dropout_prob = 0.5  # Example value, adjust as needed
+
+# Define and compile Neural Network model with Input layer
 nm_model = tf.keras.Sequential([
-    tf.keras.layers.Dense(32, activation='relu', input_shape=(X_train.shape[1], )),
+    tf.keras.layers.Input(shape=(X_train.shape[1],)),  # Specify input shape here
+    tf.keras.layers.Dense(32, activation='relu'),
+    tf.keras.layers.Dropout(dropout_prob),  # Add Dropout layer here
     tf.keras.layers.Dense(32, activation='relu'),
     tf.keras.layers.Dense(1, activation='sigmoid')
 ])
